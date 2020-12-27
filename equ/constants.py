@@ -1,11 +1,12 @@
 import numpy as np
 
-class prim:
+class prim_c:
     p_n = 12.25
-    pot = 100
+    pot = 100E3
     vol_t = 55.9
-    vol_a = 13.31
-    vol_v = 10.4
+    vol_nuc = 13.31
+    vol_g = 10.4
+    vol_f = 55.9 - 10.4
     m_rpv = 143
     m_irpv = 53
     
@@ -39,27 +40,44 @@ class gv:
     p_s = 4.7
     m_l = 600
 
-class water_f:
-    
-    R = 0.4615
-    
-    def T_sat(self, p):
-        return 178.60744 + 103.36613*np.log10(p) + 29.7073*np.log10(p)**2
-    
-    def hf(self, p):
-        return 759.25648+402.51353*np.log10(p)+144.09837*np.log10(p)**2+114.95627*np.log10(p)**3
-    
-    def hg(self, p):
-        return 2742.65249+16.48065*p-1.66783*p**2
-    
-    def rhof(self, p):
-        return 938.44405-44.48168*p+2.76929*p^2-0.08432*p^3
-    
-    def rhog(self, p):
-        return 2.01394+3.01869*p+0.23865*p^2
-    
-    def cp(self, T):
-        return (32.24+0.1923e-2*(T+273.15)+1.055e-5*(T+273.15)**2-3.595e-9*(T+273.15)**3)/18
-    
-    def cv(self, T):
-        return self.cp(T) - R
+
+R = 0.4615
+P0 = 12.25
+mRPV1 = 143E3
+mRPV2 = 53E3
+Patm=0.100330
+k = 1.327
+
+
+def T_sat(p):
+    return 178.60744 + 103.36613*np.log10(p) + 29.7073*np.log10(p)**2
+
+def hf(p):
+    return 759.25648+402.51353*np.log10(p)+144.09837*np.log10(p)**2+114.95627*np.log10(p)**3
+
+def hg(p):
+    return 2742.65249+16.48065*p-1.66783*p**2
+
+def hfg(p):
+    return hg(p) - hf(p)
+
+def rhof(p):
+    return 938.44405-44.48168*p+2.76929*p**2-0.08432*p**3
+
+def rhog(p):
+    return 2.01394+3.01869*p+0.23865*p**2
+
+def vf(p):
+    return 1/rhof(p)
+
+def vg(p):
+    return 1/rhog(p)
+
+def vfg(p):
+    return vg(p)-vf(p)
+
+def cp(T):
+    return (32.24+0.1923e-2*(T+273.15)+1.055e-5*(T+273.15)**2-3.595e-9*(T+273.15)**3)/18
+
+def cv(T):
+    return self.cp(T) - R
