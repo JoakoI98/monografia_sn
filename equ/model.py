@@ -101,7 +101,7 @@ class Estruct(sys):
         self.h = 0.3 #kW/m2 K
         self.A = 300 #float(pi)*6*12*(mRPV1+mRPV2)/mRPV1 #m2
         self.T = [T_sat(P0)]
-        self.m = (mRPV1+mRPV2)
+        self.m = (mRPV1+mRPV2)*1E3
         self.c = 0.51 #kJ/kg K
         
     @property
@@ -126,7 +126,7 @@ class Nucleo(sys):
     def __init__(self, prim = None, dt = 0, Q_th_nom = 100E3):
         sys.__init__(self, prim, dt)
         Tcomb0=600 #grados Celsius
-        self.Q0 = prim_c.pot
+        self.Q0 = Q_th_nom
         r1=3.8e-3
         L=1.4
         Ncomb=6583
@@ -150,7 +150,7 @@ class Nucleo(sys):
     def Q(self):
         Qi = self.h*self.A*(self.T[-1] - self.prim.T[-1])
         if self.scram:
-            delta_T = (q_dec(self.prim.t - self.t_scarm, self.Q0)-Qi)/(self.m*self.c)
+            delta_T = (q_dec(self.prim.t - self.t_scarm, self.Q_th_nom)-Qi)/(self.m*self.c)
         else:
             delta_T = (self.Q_th_nom-Qi)/(self.m*self.c)
         if self.debug:

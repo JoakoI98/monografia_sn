@@ -6,8 +6,8 @@ def d_dx(f,x0):
     dx=1e-4
     return (f(x0+dx)-f(x0-dx))/(2*dx)
 
-N=48*3600# 48*3600
-tTotal=36*3600# 48*3600.0
+N=3600# 48*3600
+tTotal=3600# 48*3600.0
 dt=tTotal/N
 
 prim = primario()
@@ -75,13 +75,11 @@ p0 = prim.P
 
 
 
-prim_c.vol_g = 40
-prim_c.vol_f = 55.9 - 40
 
 prim = primario()
 estr = (Estruct(prim = prim, dt = dt), True)
 secr = (Secr(prim = prim, dt = dt), False)
-nucleo = (Nucleo(prim = prim, dt = dt), True)
+nucleo = (Nucleo(prim = prim, dt = dt, Q_th_nom=150E3), True)
 gv = (GV(prim = prim, dt = dt), True)
 loca = (LOCA(prim = prim, dt = dt), False)
 sie = (SIE(prim = prim, dt = dt), False)
@@ -144,15 +142,14 @@ p1 = prim.P
 
 
 
-prim_c.vol_g = 2.3
-prim_c.vol_f = 55.9 - 2.3
+
 
 
 
 prim = primario()
 estr = (Estruct(prim = prim, dt = dt), True)
 secr = (Secr(prim = prim, dt = dt), False)
-nucleo = (Nucleo(prim = prim, dt = dt), True)
+nucleo = (Nucleo(prim = prim, dt = dt, Q_th_nom=50E3), True)
 gv = (GV(prim = prim, dt = dt), True)
 loca = (LOCA(prim = prim, dt = dt), False)
 sie = (SIE(prim = prim, dt = dt), False)
@@ -233,9 +230,9 @@ p2 = prim.P
 
 fig3 = Figure(figsize=(12,12))
 ax = fig3.add_subplot(1,1,1)
-ax.plot(t0, p0, label="M = 30.5 TON")
-ax.plot(t1, p1, label="M = 13.4 TON")
-ax.plot(t2, p2, label="M = 35.2 TON")
+ax.plot(t0, p0, label="Q = 100 MW")
+ax.plot(t1, p1, label="Q = 150 MW")
+ax.plot(t2, p2, label="Q = 50 MW")
 ax.grid(axis="both")
 #ax.plot([t_scram, t_scram], [12,14], '--', label="SCRAM", color="black")
 #ax.plot([t_secr, t_secr], [12,14], '--', label="inicio SECR", color="gray")
