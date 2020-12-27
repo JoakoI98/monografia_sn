@@ -17,6 +17,7 @@ class primario:
         self.sis = [] #Tupla con el sistema y un valor booleano que dice si esta prendido o no
         self.debug = True
         self.Q_sis = dict()
+        self.Q_neta_tot = []
         
     
     @property
@@ -31,8 +32,39 @@ class primario:
                 if not type(el).__name__ in self.Q_sis:
                     self.Q_sis[type(el).__name__] = []
                 self.Q_sis[type(el).__name__].append(qi)
+        self.Q_neta_tot.append(Q_n)
         return Q_n
         
+    def print_sis(self):
+        for el, flag in self.sis:
+            if flag:
+                print(f"ON {type(el).__name__}")
+    
+    def replace_sistem(self, new_sis):
+        p = -1
+        for i, el in enumerate(self.sis):
+            if type(el[0]).__name__ == type(new_sis[0]).__name__:
+                p = i
+        if p != -1:
+            self.sis[p] = new_sis
+    
+    def sis_on(self, new_sis):
+        p = -1
+        for i, el in enumerate(self.sis):
+            if type(el[0]).__name__ == type(new_sis[0]).__name__:
+                p = i
+        if p != -1:
+            s, f = self.sis[p]
+            self.sis[p] = (s, True)
+    
+    def sis_off(self, new_sis):
+        p = -1
+        for i, el in enumerate(self.sis):
+            if type(el[0]).__name__ == type(new_sis[0]).__name__:
+                p = i
+        if p != -1:
+            s, f = self.sis[p]
+            self.sis[p] = (s, False)
     
     @property
     def MP_neta(self):
@@ -79,10 +111,10 @@ class Estruct(sys):
         return Qi
 
 class Secr(sys):
-    def __init__(self, prim = None, dt = 0):
+    def __init__(self, prim = None, dt = 0, q0 = 2E3):
         sys.__init__(self, prim, dt)
         self.T = [T_sat(Patm)]
-        self.QSECR0 = 2e3 #kW
+        self.QSECR0 = q0 #kW
         self.h=self.QSECR0/(T_sat(P0)-self.T[0])
     
     @property
@@ -112,12 +144,13 @@ class Nucleo(sys):
         self.T = [Tcomb0]
         self.scram = False
         self.Q_th_nom = Q_th_nom
+        self.t_scarm = 0
     
     @property
     def Q(self):
         Qi = self.h*self.A*(self.T[-1] - self.prim.T[-1])
         if self.scram:
-            delta_T = (q_dec(self.prim.t, self.Q0)-Qi)/(self.m*self.c)
+            delta_T = (q_dec(self.prim.t - self.t_scarm, self.Q0)-Qi)/(self.m*self.c)
         else:
             delta_T = (self.Q_th_nom-Qi)/(self.m*self.c)
         if self.debug:
