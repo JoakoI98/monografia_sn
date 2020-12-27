@@ -1,22 +1,23 @@
 from equ import *
-import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure as Figure
+
 
 def d_dx(f,x0):
     dx=1e-4
     return (f(x0+dx)-f(x0-dx))/(2*dx)
 
-N=3600# 48*3600
-tTotal=100# 48*3600.0
+N=36000# 48*3600
+tTotal=36000# 48*3600.0
 dt=tTotal/N
 
 prim = primario()
-estr = (Estruct(prim = prim, dt = dt), False)
+estr = (Estruct(prim = prim, dt = dt), True)
 secr = (Secr(prim = prim, dt = dt), False)
-nucleo = (Nucleo(prim = prim, dt = dt), False)
-gv = (GV(prim = prim, dt = dt), False)
+nucleo = (Nucleo(prim = prim, dt = dt, Q_th_nom=1.05*100E3), True)
+gv = (GV(prim = prim, dt = dt), True)
 loca = (LOCA(prim = prim, dt = dt), False)
 sie = (SIE(prim = prim, dt = dt), False)
-pot_sys = (pot_cts(prim = prim, dt = dt), True)
+pot_sys = (pot_cts(pot = 0, prim = prim, dt = dt), False)
 
 prim.sis.append(estr)
 prim.sis.append(secr)
@@ -26,6 +27,10 @@ prim.sis.append(loca)
 prim.sis.append(sie)
 prim.sis.append(pot_sys)
 
+
+prim.debug = False
+for el, f in prim.sis:
+    el.debug = False
 for i in range(1,N):
     mp_tot = prim.MP_neta
     Q_tot = prim.Q_neta
@@ -44,5 +49,31 @@ for i in range(1,N):
     prim.vol_g.append(new_mg*vf(new_P))
     
     prim.time.append(prim.time[-1] + dt)
-    
-print(prim.P)
+
+t = prim.time
+estr, f= estr
+nucleo, f= nucleo
+gv, f= gv
+
+
+
+fig = Figure(figsize=(12,20))
+axes = [fig.add_subplot(2,2,i) for i in range(1,5)]
+axes[0].plot(t, prim.P)
+axes[1].plot(t, prim.T)
+axes[2].plot(t, estr.T)
+axes[3].plot(t, nucleo.T)
+
+axes[0].set_title("Presion en el primario")
+axes[1].set_title("Temperatura en el primario")
+axes[2].set_title("Temperatura en estructuras")
+axes[3].set_title("Temperatura en el combustible")
+
+for e in axes:
+    e.grid(axis = 'both')
+
+fig.show()
+
+print(f"P prim = {prim.P[-1]}   Tprim = {prim.T[-1]}   Testr = {estr.T[-1]}    Tcomb = {nucleo.T[-1]}")
+input()
+#print(prim.Q_sis)

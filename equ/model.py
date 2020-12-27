@@ -15,12 +15,23 @@ class primario:
         self.time = [0]
         #Sistemas que intervienen
         self.sis = [] #Tupla con el sistema y un valor booleano que dice si esta prendido o no
-        
+        self.debug = True
+        self.Q_sis = dict()
         
     
     @property
     def Q_neta(self):
-        return sum([el.Q for el, f in self.sis if f == True])
+        Q_n = 0
+        for el, flag in self.sis:
+            if flag:
+                qi = el.Q
+                if self.debug:
+                    print(f"{type(el).__name__}     Q = {qi}")
+                Q_n = Q_n + qi
+                if not type(el).__name__ in self.Q_sis:
+                    self.Q_sis[type(el).__name__] = []
+                self.Q_sis[type(el).__name__].append(qi)
+        return Q_n
         
     
     @property
@@ -42,6 +53,7 @@ class sys:
         self.h = self.A = self.c = self.m = 1
         self.prim = prim
         self.dt = dt
+        self.debug = True
     
     @property
     def mp(self):
@@ -79,7 +91,7 @@ class Secr(sys):
         return Qi
     
 class Nucleo(sys):
-    def __init__(self, prim = None, dt = 0):
+    def __init__(self, prim = None, dt = 0, Q_th_nom = 100E3):
         sys.__init__(self, prim, dt)
         Tcomb0=600 #grados Celsius
         self.Q0 = prim_c.pot
@@ -99,14 +111,17 @@ class Nucleo(sys):
         self.h = self.Q0/(Tcomb0-self.prim.T[0])
         self.T = [Tcomb0]
         self.scram = False
+        self.Q_th_nom = Q_th_nom
     
     @property
     def Q(self):
         Qi = self.h*self.A*(self.T[-1] - self.prim.T[-1])
         if self.scram:
-            delta_T = (100-Qi)/(self.m*self.c)
-        else:
             delta_T = (q_dec(self.prim.t, self.Q0)-Qi)/(self.m*self.c)
+        else:
+            delta_T = (self.Q_th_nom-Qi)/(self.m*self.c)
+        if self.debug:
+            print(f"Nucleo:   Qi = {Qi} A = {self.A}   h = {self.h}    Q0 = {self.Q0} tcomb0 = {self.T[0]}  tp0 = {self.prim.T[0]}  T = {self.T[-1]}    Tp = {self.prim.T[-1]}    deltaT = {delta_T}")
         self.T.append(self.T[-1] + delta_T*self.dt)
         return Qi
     
@@ -119,15 +134,20 @@ class GV(sys):
         QGV0=prim_c.pot
         self.h=QGV0/(self.prim.T[0]-TGV) #kW/K
         self.m0 = 600 #kg
-        self.m = [self.m]
+        self.m = [self.m0]
         self.alim = True
         self.P = PGV
+        self.Q0 = QGV0
     
     @property
     def Q(self):
         Qi = self.h*self.A*(self.m[-1]/self.m0)*(self.T[-1] - self.prim.T[-1])
         if self.alim == False:
             self.m.append(self.m[-1] + self.dt * Qi / hfg(self.P))
+        else:
+            self.m.append(self.m0)
+        if self.debug:
+            print(f"GV:   Qi = {Qi} A = {self.A}   h = {self.h}    Q0 = {self.Q0} tcomb0 = {self.T[0]}  tp0 = {self.prim.T[0]}  T = {self.T[-1]}    Tp = {self.prim.T[-1]}  m = {self.m[-1]}   m0 = {self.m0}")
         return Qi
 
 class LOCA(sys):
@@ -202,9 +222,10 @@ class SIE(sys):
 
 
 class pot_cts(sys):
-    def __init__(self, prim = None, dt = 0):
+    def __init__(self, pot = 1, prim = None, dt = 0):
         sys.__init__(self, prim, dt)
+        self.pot = pot
     
     @property
     def Q(self):
-        return 1
+        return self.pot
