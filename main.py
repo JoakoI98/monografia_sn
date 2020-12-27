@@ -69,8 +69,14 @@ axes[1].set_title("Temperatura en el primario")
 axes[2].set_title("Temperatura en estructuras")
 axes[3].set_title("Temperatura en el combustible")
 
+
+
 for e in axes:
     e.grid(axis = 'both')
+    e.set_ylabel("Temperatura [°C]")
+    e.set_xlabel("Tiempo [s]")
+
+axes[0].set_ylabel("Presion [MPa]")
 
 fig.show()
 
