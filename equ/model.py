@@ -101,7 +101,7 @@ class Estruct(sys):
         self.h = 0.3 #kW/m2 K
         self.A = 300 #float(pi)*6*12*(mRPV1+mRPV2)/mRPV1 #m2
         self.T = [T_sat(P0)]
-        self.m = (mRPV1+mRPV2)*1E3
+        self.m = (mRPV1+mRPV2)
         self.c = 0.51 #kJ/kg K
         
     @property
@@ -174,7 +174,10 @@ class GV(sys):
     
     @property
     def Q(self):
-        Qi = self.h*self.A*(self.m[-1]/self.m0)*(self.T[-1] - self.prim.T[-1])
+        if (self.m[-1] < 1E-3):
+            Qi = 0
+        else:
+            Qi = self.h*self.A*(self.m[-1]/self.m0)*(self.T[-1] - self.prim.T[-1])
         if self.alim == False:
             self.m.append(self.m[-1] + self.dt * Qi / hfg(self.P))
         else:
@@ -184,9 +187,9 @@ class GV(sys):
         return Qi
 
 class LOCA(sys):
-    def __init__(self, prim = None, dt = 0):
+    def __init__(self, prim = None, dt = 0, diam = 1.5*2.54/100):
         sys.__init__(self, prim, dt)
-        dLOCA=1.5*2.54/100
+        dLOCA=diam
         self.A=np.pi*(dLOCA**2)/4
         self.mp_t = []
     
@@ -194,10 +197,13 @@ class LOCA(sys):
     @property
     def mp(self):
         P = self.prim.P[-1]
-        if P/Patm > 2:
-            mp = self.A*np.sqrt(k*P*1e6*rhog(P)*((2/(k+1))**((k+1)/(k-1))))
+        kFLOCA = 1
+        aux1=self.A*np.sqrt(k*(P*1e6)*rhog(P)*(2/(k+1))**((k+1)/(k-1)))
+        aux2=self.A*np.sqrt(2*rhog(P)*((P-0.100330)*1e6)/kFLOCA)
+        if aux1 < aux2:
+            mp = aux1
         else:
-            mp = self.A * np.sqrt(2*rhog(P)*(P-Patm)*1E6)
+            mp = aux2
         return -1*mp
     
     @property
@@ -206,7 +212,7 @@ class LOCA(sys):
         return self.mp * hg(self.prim.P[-1])
     
 class SIE(sys):
-    def __init__(self, prim = None, dt = 0):
+    def __init__(self, prim = None, dt = 0, gamma = 1.0):
         sys.__init__(self, prim, dt)
         ASIE=4.53e-3
         kFSIE = 2.47e4
@@ -214,7 +220,6 @@ class SIE(sys):
         PcritSIE=1.5 #Mpa
         hfSIE=188.44
         rhofSIE=1000 #kg/m3
-        gamma=1.0
 
         RN2=0.2968
         VSIE0_N2 = 19.0 #m3, es el de N2
